@@ -135,19 +135,20 @@ def do_unreg(message):
 @bot.message_handler(func=lambda m: True)
 def making_task(message):
     if message.text == "Создать заявку":
-        bot.send_message(message.chat.id, "Назовите тему заявки:")
+        bot.send_message(message.chat.id, "Назовите тему заявки!")
+        
         bot.register_next_step_handler(message, process_topic)
     
 
 def process_topic(message):
     topic = message.text
-    bot.send_message(message.chat.id, "Назовите срочность заявки (от 1 до 5):")
+    bot.send_message(message.chat.id, "Назовите срочность заявки (от 1 до 10)!")
     bot.register_next_step_handler(message, process_urgency, topic)
 
 
 def process_urgency(message, topic):
     urgency = message.text
-    bot.send_message(message.chat.id, "Назовите глобальность проблемы:")
+    bot.send_message(message.chat.id, "Назовите глобальность проблемы!")
     bot.register_next_step_handler(message, process_globality, topic, urgency)
 
 
@@ -157,7 +158,7 @@ def process_globality(message, topic, urgency):
     # Вывод информации о заявке
     response = f"Проблема: {topic}\nСрочность проблемы: {urgency}\nГлобальность: {globality}"
     bot.send_message(message.chat.id, response)
-    bot.send_message(message.chat.id, 'Ваша заявка на рассмотрении!')
+    bot.send_message(message.chat.id, 'Ваша заявка на рассмотрении!!!')
 
 bot.polling()
 
