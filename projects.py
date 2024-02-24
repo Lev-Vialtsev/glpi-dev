@@ -132,10 +132,11 @@ def do_unreg(message):
     
     
 
-@bot.message_handler(func=lambda m: True)
+@bot.callback_query_handler(func=lambda call: call.data == "Создать заявку")
 def making_task(message):
-    if message.text == "Создать заявку":
+    
         bot.send_message(message.chat.id, "Назовите тему заявки!")
+        
         bot.register_next_step_handler(message, process_topic)
     
 
@@ -149,18 +150,31 @@ def process_urgency(message, topic):
     urgency = message.text
     bot.send_message(message.chat.id, "Назовите глобальность проблемы!")
     bot.register_next_step_handler(message, process_globality, topic, urgency)
-
-
+    
 
 def process_globality(message, topic, urgency):
     globality = message.text
-    # Сохранение ответов в переменных или базе данных
-    # Вывод информации о заявке
-    response = f"Проблема: {topic}\nСрочность проблемы: {urgency}\nГлобальность: {globality}"
-    bot.send_message(message.chat.id, response)
-    bot.send_message(message.chat.id, 'Ваша заявка на рассмотрении!!!')
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    button1 = types.KeyboardButton("Подтвердить")
+    button2 = types.KeyboardButton("Описать заново")
+    markup.add(button1, button2)
 
+    bot.send_message(message.chat.id, "Вы уверены, что правильно скорректировали заявку?", reply_markup=markup)
+
+@bot.callback_query_handler(func=lambda call: call.data == "Описать заново")
+def handle_button2(call):
+    bot.send_message(message.chat.id, 'Для этого нужно выбрать действие "Создать заявку"')
+
+
+# @bot.message_handler(func=lambda message: message.text == "Подтвердить")
+# def handle_button1(message, topic, urgency, globality):
+#     response = f"Проблема: {topic}\nСрочность проблемы: {urgency}\nГлобальность: {globality}"
+#     bot.send_message(message.chat.id, response)
+#     bot.send_message(message.chat.id, 'Ваша заявка на рассмотрении!!!')
+
+
+    
+    
 
 bot.polling()
 
-# ООП пока в  пролёте
