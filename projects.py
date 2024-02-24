@@ -41,6 +41,8 @@ def is_user_registered(message, user_id):
     else:
         return False
     
+
+    
 @bot.message_handler(commands=['register'])
 def register_user(message):
     global search_id
@@ -131,13 +133,13 @@ def do_unreg(message):
     conn.close()
     
     
-
-@bot.callback_query_handler(func=lambda call: call.data == "Создать заявку")
+    
+@bot.message_handler(func=lambda message: message.text == "Создать заявку")
 def making_task(message):
     
-        bot.send_message(message.chat.id, "Назовите тему заявки!")
-        
-        bot.register_next_step_handler(message, process_topic)
+    bot.send_message(message.chat.id, "Назовите тему заявки!")
+    
+    bot.register_next_step_handler(message, process_topic)
     
 
 def process_topic(message):
@@ -154,27 +156,31 @@ def process_urgency(message, topic):
 
 def process_globality(message, topic, urgency):
     globality = message.text
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    button1 = types.KeyboardButton("Подтвердить")
-    button2 = types.KeyboardButton("Описать заново")
+    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    button1 = types.KeyboardButton(text="описать заново")
+    button2 = types.KeyboardButton(text="подтвердить")
     markup.add(button1, button2)
-
     bot.send_message(message.chat.id, "Вы уверены, что правильно скорректировали заявку?", reply_markup=markup)
+    # markup = types.InlineKeyboardMarkup()
+    # button1 = types.InlineKeyboardButton(text="описать заново", callback_data="описать_заново")
+    # button2 = types.InlineKeyboardButton(text="подтвердить", callback_data="Подтвердить")
+    # markup.add(button1, button2)
+    # bot.send_message(message.chat.id, "Вы уверены, что правильно скорректировали заявку?", reply_markup=markup)
 
-@bot.callback_query_handler(func=lambda call: call.data == "Описать заново")
-def handle_button2(call):
+@bot.message_handler(func=lambda message: message.text == "описать заново")
+def again(message):
+    
+    bot.delete_message(message.chat.id, message.message_id)
+
     bot.send_message(message.chat.id, 'Для этого нужно выбрать действие "Создать заявку"')
 
 
-# @bot.message_handler(func=lambda message: message.text == "Подтвердить")
-# def handle_button1(message, topic, urgency, globality):
-#     response = f"Проблема: {topic}\nСрочность проблемы: {urgency}\nГлобальность: {globality}"
-#     bot.send_message(message.chat.id, response)
-#     bot.send_message(message.chat.id, 'Ваша заявка на рассмотрении!!!')
-
-
+@bot.message_handler(func=lambda message: message.text == "подтвердить")
+def accept(message, topic, urgency, globality):
     
-    
+    response = f"Проблема: {topic}\nСрочность проблемы: {urgency}\nГлобальность: {globality}"
+    bot.send_message(message.chat.id, response)
+    bot.send_message(message.chat.id, 'Ваша заявка на рассмотрении!!!')
+
 
 bot.polling()
-
