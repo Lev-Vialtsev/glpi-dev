@@ -136,7 +136,6 @@ def do_unreg(message):
 def making_task(message):
     if message.text == "Создать заявку":
         bot.send_message(message.chat.id, "Назовите тему заявки!")
-        
         bot.register_next_step_handler(message, process_topic)
     
 
@@ -152,6 +151,7 @@ def process_urgency(message, topic):
     bot.register_next_step_handler(message, process_globality, topic, urgency)
 
 
+
 def process_globality(message, topic, urgency):
     globality = message.text
     # Сохранение ответов в переменных или базе данных
@@ -160,67 +160,7 @@ def process_globality(message, topic, urgency):
     bot.send_message(message.chat.id, response)
     bot.send_message(message.chat.id, 'Ваша заявка на рассмотрении!!!')
 
+
 bot.polling()
 
-
-
-
-
-
-
-
-
-
-
-# import sqlite3
-# import telebot
-
-# usname = None
-
-# bot_token = '6964646666:AAG1gwMBWXE439pydC54btwBEkuqPK93dDU'
-# bot = telebot.TeleBot(bot_token)
-
-
-# @bot.message_handler(commands=['start'])
-# def start(message):
-#     conn = sqlite3.connect('D:\Desktop\Yandex_tasks\GLPItelegramBot\database_reg.db')
-#     cur = conn.cursor()
-#     cur.execute('''CREATE TABLE IF NOT EXISTS
-#     reg_inf(id INTEGER PRIMARY KEY AUTOINCREMENT, 
-#     name TEXT, 
-#     pass TEXT
-#     )''')
-#     conn.commit()
-#     cur.close()
-#     conn.close()
-
-#     bot.send_message(message.chat.id, 'Введите ваше имя')
-
-#     bot.register_next_step_handler(message, name_reg)
-
-
-# def name_reg(message):
-#     global usname
-
-#     usname = message.text.strip()
-
-#     bot.send_message(message.chat.id, 'Введите пароль')
-
-#     bot.register_next_step_handler(message, pass_reg)
-
-
-# def pass_reg(message):
-#     password = message.text.strip()
-
-#     conn = sqlite3.connect('D:\Desktop\Yandex_tasks\GLPItelegramBot\database_reg.db')
-#     cur = conn.cursor()
-
-#     cur.execute('INSERT INTO reg_inf(name, pass) VALUES(?, ?)', (usname, password))
-#     conn.commit()
-#     cur.close()
-#     conn.close()
-
-#     bot.send_message(message.chat.id, 'Пользователь зарегистрирован!')
-
-
-# bot.polling(non_stop=True)
+# ООП пока в  пролёте
