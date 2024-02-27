@@ -156,31 +156,27 @@ def process_urgency(message, topic):
 
 def process_globality(message, topic, urgency):
     globality = message.text
-    markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    button1 = types.KeyboardButton(text="описать заново")
-    button2 = types.KeyboardButton(text="подтвердить")
-    markup.add(button1, button2)
+    markup = types.InlineKeyboardMarkup()
+    button1 = types.InlineKeyboardButton("описать заново", callback_data="описать_заново")
+    button2 = types.InlineKeyboardButton("подтвердить", callback_data="Подтвердить")
+    markup.row(button1, button2)
     bot.send_message(message.chat.id, "Вы уверены, что правильно скорректировали заявку?", reply_markup=markup)
-    # markup = types.InlineKeyboardMarkup()
-    # button1 = types.InlineKeyboardButton(text="описать заново", callback_data="описать_заново")
-    # button2 = types.InlineKeyboardButton(text="подтвердить", callback_data="Подтвердить")
-    # markup.add(button1, button2)
-    # bot.send_message(message.chat.id, "Вы уверены, что правильно скорректировали заявку?", reply_markup=markup)
 
-@bot.message_handler(func=lambda message: message.text == "описать заново")
-def again(message):
+@bot.callback_query_handler(func=lambda callback: True)
+def again(callback):
     
-    bot.delete_message(message.chat.id, message.message_id)
+    if callback.data == "описать_заново":
+        bot.delete_message(callback.message.chat.id, callback.message.message_id)
 
-    bot.send_message(message.chat.id, 'Для этого нужно выбрать действие "Создать заявку"')
+        bot.send_message(callback.message.chat.id, 'Для этого нужно выбрать действие "Создать заявку"')
 
-
-@bot.message_handler(func=lambda message: message.text == "подтвердить")
-def accept(message, topic, urgency, globality):
+@bot.callback_query_handler(func=lambda callback: True)
+def accept(callback):
     
-    response = f"Проблема: {topic}\nСрочность проблемы: {urgency}\nГлобальность: {globality}"
-    bot.send_message(message.chat.id, response)
-    bot.send_message(message.chat.id, 'Ваша заявка на рассмотрении!!!')
+    if callback.data == "Подтвердить":
+        response = f"Проблема: {topic}\nСрочность проблемы: {urgency}\nГлобальность: {globality}"
+        bot.send_message(message.chat.id, response)
+        bot.send_message(message.chat.id, 'Ваша заявка на рассмотрении!!!')
 
 
 bot.polling()
