@@ -1,14 +1,11 @@
 import requests, json, logging, traceback
 
-# Установка уровня логирования
-logging.basicConfig(level=logging.INFO)
-
 
 '''Получение токена сессии'''
 
 session_token = None
 
-def init_session(user_token):
+def init_session():
     global session_token
 
     url = "https://task.it25.org/apirest.php/initSession"
@@ -20,7 +17,7 @@ def init_session(user_token):
 
     # Аутентификация с помощью токена пользователя
 
-    # user_token = "OKlQa3NuZ3mVvHWObmMDmT6L03WKC0E5t9FQE9Fk"
+    user_token = "OKlQa3NuZ3mVvHWObmMDmT6L03WKC0E5t9FQE9Fk"
     headers["Authorization"] = f"user_token {user_token}"
 
     # Отправка запроса GET
@@ -34,25 +31,24 @@ def init_session(user_token):
         data = response.json()
         if 'session_token' in data:
             session_token = data['session_token']
-            logging.info(f"Успешно получен токен сеанса: {session_token}")
-        else:
-            logging.error(f"Ошибка при инициализации сеанса: Не удалось получить токен сессии")
-            logging.error(f"Ответ сервера: {response.text}")
+        #     logging.info(f"Успешно получен токен сеанса: {session_token}")
+        # else:
+        #     logging.error(f"Ошибка при инициализации сеанса: Не удалось получить токен сессии")
+        #     logging.error(f"Ответ сервера: {response.text}")
+    
 
     return session_token
 
-# Вызов функции для инициализации сессии
-init_session("https://task.it25.org/apirest.php/initSession", "OKlQa3NuZ3mVvHWObmMDmT6L03WKC0E5t9FQE9Fk")
+# init_session()
 
-
-def change_active_entities(link, session_token):
+def change_active_entities(session_token):
     # Данные для POST запроса
     
     url = "https://task.it25.org/apirest.php/changeActiveEntities"
     headers = {
         "Content-Type": "application/json",
         "App-Token": "OiBm5phLf0MaJ5G2yzMjZu53Q50lb7tDtaZw0fPd",
-        "Session-Token": "hjj7o6kv2eg8dsbt1oos0led6l"
+        "Session-Token": session_token
     }
     data = {
         "entities_id": 2,
@@ -66,6 +62,9 @@ def change_active_entities(link, session_token):
         print(json.dumps(response_data, indent=4, sort_keys=True, ensure_ascii=False))
     except requests.exceptions.RequestException as e:
         print(f"Произошла ошибка при отправке запроса: {e}")
+
+
+
 
 
 def check_user_num(session_token, phone_number):
@@ -95,7 +94,7 @@ def check_user_num(session_token, phone_number):
             print(f"Ошибка при инициализации сеанса: {response.status_code} {response.text}")
 
 
-def kill_session(user_token):
+def kill_session(session_token):
     '''Получение токена сессии'''
     # URL конечной точки
 
@@ -105,7 +104,7 @@ def kill_session(user_token):
     headers = {
         "Content-Type": "application/json",
         "App-Token": "OiBm5phLf0MaJ5G2yzMjZu53Q50lb7tDtaZw0fPd",
-        "Session-Token": "g8js4cqss705km13cld7nl6mam"
+        "Session-Token": session_token
     }
 
     # Аутентификация с помощью токена пользователя
@@ -127,3 +126,4 @@ def kill_session(user_token):
             print(json.dumps(data, indent=4, sort_keys=True,ensure_ascii=False))
         else:
             print(f"Ошибка при инициализации сеанса: {response.status_code} {response.text}")
+
