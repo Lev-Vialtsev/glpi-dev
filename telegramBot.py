@@ -1,15 +1,48 @@
-import telebot, sqlite3, tgl, glpil, logging, traceback, sys, configparser
+import telebot
+import sqlite3
+import tgl
+import glpil
+import logging
+import traceback
+import sys
+import configparser
+
+# Инициализация логгирования
+log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(funcName)s() - %(message)s')
+
+# Загрузка конфигурации
+def loadConfig(file_name):
+    config = configparser.ConfigParser()
+    try:
+        config.read(file_name)
+        return config
+    except configparser.Error as e:
+        log.error(f"Ошибка при чтении конфигурационного файла: {e}")
+        sys.exit(1)
+
+# Основной блок кода
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print("Нужен 1 параметр - файл конфигурации")
+        sys.exit(1)
+    else:
+        config = loadConfig(sys.argv[1])
+
+        # Настройка уровня логгирования
+        if config.getboolean("logging", "debug"):
+            log.setLevel(logging.DEBUG)
+        else:
+            log.setLevel(logging.INFO)
 
 # Инициализация бота
-
-bot_token = '6964646666:AAG1gwMBWXE439pydC54btwBEkuqPK93dDU'
-
+bot_token = config.get('bot', 'token')
 bot = tgl.init(bot_token)
-
-
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
+    log.info(f"Обработка команды '/start' от пользователя {message.from_user.id}")
+
     conn = sqlite3.connect("C:\\Users\\Admin\\Desktop\\DataBases\\glpi_db.db")
     cur = conn.cursor()
 
@@ -51,102 +84,63 @@ def handle_start(message):
 
 @bot.message_handler(func=lambda message: message.text == "Start")
 def handle_start_button(message):
+    log.info(f"Пользователь {message.from_user.id} нажал кнопку 'Start'")
+
     bot.send_message(message.chat.id, "Пожалуйста, введите свой номер телефона:")
     bot.register_next_step_handler(message, handle_phone_input)
-  
 
 def handle_phone_input(message):
+    log.info(f"Пользователь {message.from_user.id} ввел номер телефона: {message.text}")
+
     conn = sqlite3.connect("C:\\Users\\Admin\\Desktop\\DataBases\\glpi_db.db")
     cur = conn.cursor()
-    
+
     phone_number = message.text
 
-    session_token = glpil.init_session()
+    try:
+        session_token = glpil.init_session()
+        data = glpil.check_user_num(session_token, phone_number)
 
-    data = glpil.check_user_num(session_token, phone_number)
+        if data:
+            log.info(f"Номер телефона {phone_number} найден в системе для пользователя {message.from_user.id}")
+            glpil.kill_session(session_token)
 
-    if data:
+            # Получаем ID пользователя
+            user_id = message.from_user.id
 
-        glpil.kill_session(session_token)
+            # Проверяем, есть ли уже пользователь с таким ID в базе данных
+            cur.execute("SELECT * FROM Users WHERE user_id = ?", (user_id,))
+            existing_user = cur.fetchone()
 
+            if existing_user:
+                cur.execute("SELECT * FROM Users WHERE user_id = ? AND phone = ?", (user_id, phone_number))
+                have_phone_number = cur.fetchone()
 
-        # Получаем ID пользователя
-        user_id = message.from_user.id
-
-        # Проверяем, есть ли уже пользователь с таким ID в базе данных
-        cur.execute("SELECT * FROM Users WHERE user_id = ?", (user_id,))
-        existing_user = cur.fetchone()
-        
-
-        if existing_user:
-
-            cur.execute("SELECT * FROM Users WHERE user_id = ? AND phone = ?", (user_id, phone_number))
-            have_phone_number = cur.fetchone()
-
-            if have_phone_number:
-                # Если номер пользователя привязан к ID
-                bot.send_message(message.chat.id, "Ваш номер найден в системе!")
+                if have_phone_number:
+                    # Если номер пользователя привязан к ID
+                    bot.send_message(message.chat.id, "Ваш номер найден в системе!")
+                else:
+                    cur.execute("UPDATE Users SET phone = ? WHERE user_id = ?", (phone_number, user_id))
+                    bot.send_message(message.chat.id, "Ваш номер успешно добавлен в систему!")
             else:
-                cur.execute("UPDATE Users SET phone = ? WHERE user_id = ?", (phone_number, user_id))
-                bot.send_message(message.chat.id, "Ваш номер успешно добавлен в систему!")
+                # Добавляем нового пользователя в базу данных
+                cur.execute("INSERT INTO Users (user_id, phone) VALUES (?, ?)", (user_id, phone_number))
+                conn.commit()
+                bot.send_message(message.chat.id, "Вы успешно добавлены в систему!")
 
         else:
-            # Добавляем нового пользователя в базу данных
+            log.info(f"Номер телефона {phone_number} не найден в системе для пользователя {message.from_user.id}")
+            bot.send_message(message.chat.id, "Номер не найден в системе")
+            glpil.kill_session(session_token)
 
-            cur.execute("INSERT INTO Users (user_id, phone) VALUES (?, ?)", (user_id, phone_number))
-            conn.commit()
-            bot.send_message(message.chat.id, "Вы успешно добавлены в систему!")
+    except Exception as e:
+        log.error(f"Ошибка при обработке номера телефона: {e}")
+        traceback.print_exc()
+        bot.send_message(message.chat.id, "Произошла ошибка. Пожалуйста, попробуйте позже.")
 
-    else:
-        bot.send_message(message.chat.id, "Номер не найден в системе")
-
-        glpil.kill_session(session_token)
-
-    cur.close()
-    conn.close()
-    
-    
-
-
-
-
-# def loadConfig(file_name):
-#     config = configparser.ConfigParser()
-#     config.read(file_name)
-#     return config
-
-# if __name__ == '__main__':
-#     if len(sys.argv) < 2:
-#         print("need 1 param - config file")
-#         sys.exit(1)
-#     else:
-#         config = loadConfig(sys.argv[1])
-#     log=logging.getLogger("telegram-bot-reaction")
-
-#     if config["logging"]["debug"].lower()=="yes":
-#         log.setLevel(logging.DEBUG)
-#     else:
-#         log.setLevel(logging.INFO)
-
-#     # create the logging file handler
-#     #fh = logging.FileHandler(config.log_path)
-#     fh = logging.handlers.TimedRotatingFileHandler(config["logging"]["log_path"], when=config["logging"]["log_backup_when"], backupCount=int(config["logging"]["log_backup_count"]), encoding='utf-8')
-#     formatter = logging.Formatter('%(asctime)s - %(name)s - %(filename)s:%(lineno)d - %(funcName)s() %(levelname)s - %(message)s')
-#     fh.setFormatter(formatter)
-
-#     # if config["logging"]["debug"].lower()=="yes":
-#     # логирование в консоль:
-#     stdout = logging.StreamHandler(sys.stdout)
-#     stdout.setFormatter(formatter)
-#     log.addHandler(stdout)
-
-#     # add handler to logger object
-#     log.addHandler(fh)
-
-#     log.info("Program started")
-#     log.info("python version=%s"%sys.version)
-
+    finally:
+        cur.close()
+        conn.close()
 
 # Запуск бота
 bot.polling()
-
