@@ -1,6 +1,6 @@
-import telebot, logging, traceback, sys, configparser
+import telebot, requests
 
-bot = None
+bot = '6964646666:AAG1gwMBWXE439pydC54btwBEkuqPK93dDU'
 
 '''Функции init и connect не прописаны в классе библиотеки, ими является структура основного кода
     и возможность пользователя контактировать с ботом'''
@@ -14,11 +14,27 @@ def init(token):
 
 '''Функция send_message принимает на вход чат в который уходит сообщение и тот или иной текст, который оно содержит''' 
 
-def send_message(chat_id, text):
-    try:
-        bot.send_message(chat_id, text)
-    except Exception as e:
-        logging.log.error(f"An error occurred while sending a message: {e}")
-        traceback.print_exc()
+
         
+def send_message(bot_token, chat_id, message_thread_id, message_text):
+
+    # Формирование URL-адреса
+    url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
+
+    # Данные для отправки
+    data = {
+        'chat_id': chat_id,
+        'text': message_text,
+        'reply_to_message_id': message_thread_id,  # Указываем ID темы
+        'parse_mode': 'HTML'  # Используем HTML
+    }
+
+    # Отправка запроса
+    response = requests.post(url, data=data)
+
+    # Проверка результата
+    if response.status_code == 200:
+        print('Сообщение успешно отправлено!')
+    else:
+        print('Ошибка отправки сообщения')
 

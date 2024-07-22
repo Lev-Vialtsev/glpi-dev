@@ -127,3 +127,105 @@ def kill_session(session_token):
         else:
             print(f"Ошибка при инициализации сеанса: {response.status_code} {response.text}")
 
+
+
+def get_existing_tasks(session_token):
+
+    url = "https://task.it25.org/apirest.php/search/ticket?criteria[0][link]=AND&criteria[0][field]=15&criteria[0][searchtype]=morethan&criteria[0][value]=-15MINUTE&itemtype=Ticket&start=0"
+
+    # Заголовки запроса
+    headers = {
+        "Content-Type": "application/json",
+        "App-Token": "OiBm5phLf0MaJ5G2yzMjZu53Q50lb7tDtaZw0fPd", 
+        "Session-Token": session_token
+    }
+
+    # Отправка запроса GET
+    try:
+        response = requests.get(url, headers=headers)
+    except requests.exceptions.ConnectionError as e:
+        print(f"Ошибка соединения: {e}")
+    except requests.exceptions.NameResolutionError as e:
+        print(f"Ошибка разрешения имени: {e}")
+    else:
+        # Проверка ответа
+        if response.status_code == 200:
+            # Получение токена сеанса
+            data = response.json()
+            print(json.dumps(data, indent=4, sort_keys=True, ensure_ascii=False))
+        else:
+            print(f"Ошибка при инициализации сеанса: {response.status_code} {response.text}")
+    return data
+
+
+def get_task_info(session_token, task_id):
+
+    url_without_id = "https://task.it25.org/apirest.php/Ticket/"
+    url = url_without_id + str(task_id)
+
+    # Заголовки запроса
+    headers = {
+        "Content-Type": "application/json",
+        "App-Token": "OiBm5phLf0MaJ5G2yzMjZu53Q50lb7tDtaZw0fPd", 
+        "Session-Token": session_token
+    }
+
+    # Отправка запроса GET
+    try:
+        response = requests.get(url, headers=headers)
+    except requests.exceptions.ConnectionError as e:
+        print(f"Ошибка соединения: {e}")
+    except requests.exceptions.NameResolutionError as e:
+        print(f"Ошибка разрешения имени: {e}")
+    else:
+        # Проверка ответа
+        if response.status_code == 200:
+            # Получение токена сеанса
+            data = response.json()
+            return data
+            # print(json.dumps(data, indent=4, sort_keys=True, ensure_ascii=False))
+        else:
+            print(f"Ошибка при инициализации сеанса: {response.status_code} {response.text}")
+
+    
+         
+
+def get_user_info(session_token, user_id):
+
+    url_without_id = "https://task.it25.org/apirest.php/user/"
+    url = url_without_id + str(user_id)
+
+    # Заголовки запроса
+    headers = {
+        "Content-Type": "application/json",
+        "App-Token": "OiBm5phLf0MaJ5G2yzMjZu53Q50lb7tDtaZw0fPd", 
+        "Session-Token": session_token
+    }
+
+    # Отправка запроса GET
+    try:
+        response = requests.get(url, headers=headers)
+    except requests.exceptions.ConnectionError as e:
+        print(f"Ошибка соединения: {e}")
+    except requests.exceptions.NameResolutionError as e:
+        print(f"Ошибка разрешения имени: {e}")
+    else:
+        # Проверка ответа
+        if response.status_code == 200:
+            # Получение токена сеанса
+            data = response.json()
+            # print(json.dumps(data, indent=4, sort_keys=True, ensure_ascii=False))
+        else:
+            print(f"Ошибка при инициализации сеанса: {response.status_code} {response.text}")
+
+    return data
+
+# print(init_session())
+
+
+# session_token = '1hl1ine256uf9vphrj3sus4bjn'
+# kill_session(session_token)
+
+# get_existing_tasks(session_token)
+
+
