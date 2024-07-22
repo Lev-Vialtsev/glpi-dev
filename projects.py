@@ -1,5 +1,3 @@
-"""Бот для регистрации"""
-
 import sqlite3
 import telebot
 from telebot import types
@@ -41,17 +39,36 @@ def is_user_registered(message, user_id):
     else:
         return False
     
+
+    
 @bot.message_handler(commands=['register'])
 def register_user(message):
     global search_id
     conn = sqlite3.connect('D:\Desktop\Yandex_tasks\GLPItelegramBot\database_reg.db')
     cur = conn.cursor()
     cur.execute('''CREATE TABLE IF NOT EXISTS
-    reg_inf(id INTEGER PRIMARY KEY AUTOINCREMENT, 
+    reg_inf(id INTEGER, 
     name TEXT, 
     pass TEXT,
-    usid INTEGER
+    usid INTEGER PRIMARY KEY
     )''')
+    conn.commit()
+    
+    cur.execute('''CREATE TABLE IF NOT EXISTS
+    user_tickets(id INTEGER PRIMARY KEY 
+    REFERENCES reg_inf(usid),
+    us_name TEXT,
+    name_ticket TEXT,
+    urgency_ticket TEXT,
+    globality_ticket TEXT 
+)''')
+    
+    conn.commit()
+    
+    cur.execute('''SELECT reg_inf.usid, user_tickets.id
+                FROM reg_inf
+                JOIN user_tickets ON reg_inf.usid = user_tickets.id''')
+    
     conn.commit()
     
     cur.execute('SELECT * FROM reg_inf WHERE usid = ?', (message.from_user.id,))
@@ -131,12 +148,13 @@ def do_unreg(message):
     conn.close()
     
     
-
-@bot.message_handler(func=lambda m: True)
+    
+@bot.message_handler(func=lambda message: message.text == "Создать заявку")
 def making_task(message):
-    if message.text == "Создать заявку":
-        bot.send_message(message.chat.id, "Назовите тему заявки!")
-        bot.register_next_step_handler(message, process_topic)
+    
+    bot.send_message(message.chat.id, "Назовите тему заявки!")
+    
+    bot.register_next_step_handler(message, process_topic)
     
 
 def process_topic(message):
@@ -149,18 +167,47 @@ def process_urgency(message, topic):
     urgency = message.text
     bot.send_message(message.chat.id, "Назовите глобальность проблемы!")
     bot.register_next_step_handler(message, process_globality, topic, urgency)
-
-
+    
 
 def process_globality(message, topic, urgency):
     globality = message.text
-    # Сохранение ответов в переменных или базе данных
-    # Вывод информации о заявке
-    response = f"Проблема: {topic}\nСрочность проблемы: {urgency}\nГлобальность: {globality}"
-    bot.send_message(message.chat.id, response)
-    bot.send_message(message.chat.id, 'Ваша заявка на рассмотрении!!!')
+    conn = sqlite3.connect('D:\Desktop\Yandex_tasks\GLPItelegramBot\database_reg.db')
+    cur = conn.cursor()
+
+    cur.execute('INSERT INTO user_tickets(name_ticket, urgency_ticket, globality_ticket) VALUES(?, ?, ?)', (topic, urgency, globality))
+    conn.commit()
+    cur.close()
+    conn.close()
+    markup = types.InlineKeyboardMarkup()
+    button1 = types.InlineKeyboardButton("описать заново", callback_data="описать_заново")
+    button2 = types.InlineKeyboardButton("подтвердить", callback_data="Подтвердить")
+    markup.row(button1, button2)
+    bot.send_message(message.chat.id, "Вы уверены, что правильно скорректировали заявку?", reply_markup=markup)
+
+@bot.callback_query_handler(func=lambda callback: True)
+def again(callback):
+    
+    if callback.data == "описать_заново":
+        bot.delete_message(callback.message.chat.id, callback.message.message_id)
+
+        bot.send_message(callback.message.chat.id, 'Для этого нужно выбрать действие "Создать заявку"')
+        
+    elif callback.data == "Подтвердить":
+        conn = sqlite3.connect('D:\Desktop\Yandex_tasks\GLPItelegramBot\database_reg.db')
+        cur = conn.cursor()
+        
+        cur.execute('SELECT id FROM reg_inf WHERE usid = ?', (callback.message.chat.id,))
+        id_us = cur.fetchone()
+        
+        cur.execute('INSERT INTO user_tickets(us_name, name_ticket, urgency_ticket, globality_ticket) VALUES(?, ?, ?, ?)', (id_us, topic, urgency, globality))
+        conn.commit()
+        
+        cur.close()
+        conn.close()
+        
+        response = f"Проблема: {topic}\nСрочность проблемы: {urgency}\nГлобальность: {globality}"
+        bot.send_message(callback.message.chat.id, response)
+        bot.send_message(callback.message.chat.id, 'Ваша заявка на рассмотрении!!!')
 
 
 bot.polling()
-
-# ООП пока в  пролёте
