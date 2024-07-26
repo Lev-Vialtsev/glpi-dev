@@ -1,11 +1,24 @@
-import requests, json, logging, traceback
+import requests
+import json
+import logging
+import configparser
+import traceback
+
+# --- CONFIG ---
+config = configparser.ConfigParser()
+config.read('notifier_config.ini')
+
+app_token = config['API']['app_token']
+user_token = config['API']['user_token']
+session_token = None
+
+# Logging
+# logging.basicConfig(filename='glpi_notifications.log', 
+#                     level=logging.INFO,
+#                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 '''Получение токена сессии'''
 
-# Секция нвстроек (CONFIG)
-session_token = None
-app_token     = "OiBm5phLf0MaJ5G2yzMjZu53Q50lb7tDtaZw0fPd"
-user_token    = "el9RQ3xN7Kkj34QBwPLVpgEXs3mZPBQQ8esOVkhn"
 
 def init_session():
     global session_token, user_token
@@ -32,10 +45,6 @@ def init_session():
         data = response.json()
         if 'session_token' in data:
             session_token = data['session_token']
-        #     logging.info(f"Успешно получен токен сеанса: {session_token}")
-        # else:
-        #     logging.error(f"Ошибка при инициализации сеанса: Не удалось получить токен сессии")
-        #     logging.error(f"Ответ сервера: {response.text}")
 
     return session_token
 
