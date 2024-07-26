@@ -1,6 +1,6 @@
 import telebot, requests
 
-bot = '6964646666:AAG1gwMBWXE439pydC54btwBEkuqPK93dDU'
+bot = None
 
 '''Функции init и connect не прописаны в классе библиотеки, ими является структура основного кода
     и возможность пользователя контактировать с ботом'''
@@ -14,8 +14,6 @@ def init(token):
 
 '''Функция send_message принимает на вход чат в который уходит сообщение и тот или иной текст, который оно содержит''' 
 
-
-        
 def send_message(bot_token, chat_id, message_thread_id, message_text):
 
     # Формирование URL-адреса
@@ -34,7 +32,7 @@ def send_message(bot_token, chat_id, message_thread_id, message_text):
 
     # Проверка результата
     if response.status_code == 200:
-        print('Сообщение успешно отправлено!')
+        print('TGL: Сообщение успешно отправлено!')
     else:
-        print('Ошибка отправки сообщения')
+        print('TGL: Ошибка отправки сообщения')
 

@@ -1,23 +1,24 @@
 import requests, json, logging, traceback
 
-
 '''Получение токена сессии'''
 
+# Секция нвстроек (CONFIG)
 session_token = None
+app_token     = "OiBm5phLf0MaJ5G2yzMjZu53Q50lb7tDtaZw0fPd"
+user_token    = "el9RQ3xN7Kkj34QBwPLVpgEXs3mZPBQQ8esOVkhn"
 
 def init_session():
-    global session_token
+    global session_token, user_token
+    global app_token
 
     url = "https://task.it25.org/apirest.php/initSession"
     # Заголовки запроса
     headers = {
         "Content-Type": "application/json",
-        "App-Token": "OiBm5phLf0MaJ5G2yzMjZu53Q50lb7tDtaZw0fPd"
+        "App-Token": app_token
     }
 
     # Аутентификация с помощью токена пользователя
-
-    user_token = "OKlQa3NuZ3mVvHWObmMDmT6L03WKC0E5t9FQE9Fk"
     headers["Authorization"] = f"user_token {user_token}"
 
     # Отправка запроса GET
@@ -35,19 +36,17 @@ def init_session():
         # else:
         #     logging.error(f"Ошибка при инициализации сеанса: Не удалось получить токен сессии")
         #     logging.error(f"Ответ сервера: {response.text}")
-    
 
     return session_token
 
-# init_session()
-
 def change_active_entities(session_token):
+    global app_token
+
     # Данные для POST запроса
-    
     url = "https://task.it25.org/apirest.php/changeActiveEntities"
     headers = {
         "Content-Type": "application/json",
-        "App-Token": "OiBm5phLf0MaJ5G2yzMjZu53Q50lb7tDtaZw0fPd",
+        "App-Token": app_token,
         "Session-Token": session_token
     }
     data = {
@@ -64,10 +63,9 @@ def change_active_entities(session_token):
         print(f"Произошла ошибка при отправке запроса: {e}")
 
 
-
-
-
 def check_user_num(session_token, phone_number):
+    global app_token
+
     url = f"https://task.it25.org/apirest.php/search/user?criteria[0][field]=11& \
     criteria[0][searchtype]=contains&criteria[0][value]={phone_number}&criteria[1][link]=OR& \
     criteria[1][field]=6&criteria[1][searchtype]=contains&criteria[1][value]={phone_number}& \
@@ -75,8 +73,8 @@ def check_user_num(session_token, phone_number):
 
     headers = {
         "Content-Type": "application/json",
-        "App-Token": "OiBm5phLf0MaJ5G2yzMjZu53Q50lb7tDtaZw0fPd",
-        "Session-Token": session_token,
+        "App-Token": app_token,
+        "Session-Token": session_token
     }
 
     try:
@@ -95,20 +93,20 @@ def check_user_num(session_token, phone_number):
 
 
 def kill_session(session_token):
-    '''Получение токена сессии'''
-    # URL конечной точки
+    global app_token
+    global user_token
 
+    # URL конечной точки
     url = "https://task.it25.org/apirest.php/killSession"
 
     # Заголовки запроса
     headers = {
         "Content-Type": "application/json",
-        "App-Token": "OiBm5phLf0MaJ5G2yzMjZu53Q50lb7tDtaZw0fPd",
+        "App-Token": app_token,
         "Session-Token": session_token
     }
 
     # Аутентификация с помощью токена пользователя
-    user_token = "OKlQa3NuZ3mVvHWObmMDmT6L03WKC0E5t9FQE9Fk"
     headers["Authorization"] = f"user_token {user_token}"
 
     # Отправка запроса GET
@@ -128,15 +126,15 @@ def kill_session(session_token):
             print(f"Ошибка при инициализации сеанса: {response.status_code} {response.text}")
 
 
-
 def get_existing_tasks(session_token):
+    global app_token
 
     url = "https://task.it25.org/apirest.php/search/ticket?criteria[0][link]=AND&criteria[0][field]=15&criteria[0][searchtype]=morethan&criteria[0][value]=-15MINUTE&itemtype=Ticket&start=0"
 
     # Заголовки запроса
     headers = {
         "Content-Type": "application/json",
-        "App-Token": "OiBm5phLf0MaJ5G2yzMjZu53Q50lb7tDtaZw0fPd", 
+        "App-Token": app_token,
         "Session-Token": session_token
     }
 
@@ -159,14 +157,15 @@ def get_existing_tasks(session_token):
 
 
 def get_task_info(session_token, task_id):
+    global app_token
 
     url_without_id = "https://task.it25.org/apirest.php/Ticket/"
     url = url_without_id + str(task_id)
 
     # Заголовки запроса
     headers = {
-        "Content-Type": "application/json",
-        "App-Token": "OiBm5phLf0MaJ5G2yzMjZu53Q50lb7tDtaZw0fPd", 
+        "Content-Type":  "application/json",
+        "App-Token":     app_token,
         "Session-Token": session_token
     }
 
@@ -187,10 +186,9 @@ def get_task_info(session_token, task_id):
         else:
             print(f"Ошибка при инициализации сеанса: {response.status_code} {response.text}")
 
-    
-         
 
 def get_user_info(session_token, user_id):
+    global app_token
 
     url_without_id = "https://task.it25.org/apirest.php/user/"
     url = url_without_id + str(user_id)
@@ -198,7 +196,7 @@ def get_user_info(session_token, user_id):
     # Заголовки запроса
     headers = {
         "Content-Type": "application/json",
-        "App-Token": "OiBm5phLf0MaJ5G2yzMjZu53Q50lb7tDtaZw0fPd", 
+        "App-Token":     app_token,
         "Session-Token": session_token
     }
 
@@ -219,13 +217,3 @@ def get_user_info(session_token, user_id):
             print(f"Ошибка при инициализации сеанса: {response.status_code} {response.text}")
 
     return data
-
-# print(init_session())
-
-
-# session_token = '1hl1ine256uf9vphrj3sus4bjn'
-# kill_session(session_token)
-
-# get_existing_tasks(session_token)
-
-
