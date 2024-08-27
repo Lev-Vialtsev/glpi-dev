@@ -3,6 +3,7 @@ import json
 import logging
 import configparser
 import traceback
+from datetime import datetime
 
 # --- CONFIG ---
 config = configparser.ConfigParser()
@@ -10,21 +11,16 @@ config.read('notifier_config.ini')
 
 app_token = config['API']['app_token']
 user_token = config['API']['user_token']
+API_BASE_URL = config["API"]['API_BASE_URL']
 session_token = None
 
-# Logging
-# logging.basicConfig(filename='glpi_notifications.log', 
-#                     level=logging.INFO,
-#                     format='%(asctime)s - %(levelname)s - %(message)s')
-
 '''Получение токена сессии'''
-
 
 def init_session():
     global session_token, user_token
     global app_token
 
-    url = "https://task.it25.org/apirest.php/initSession"
+    url = f"{API_BASE_URL}/initSession"
     # Заголовки запроса
     headers = {
         "Content-Type": "application/json",
@@ -135,12 +131,22 @@ def kill_session(session_token):
             print(f"Ошибка при инициализации сеанса: {response.status_code} {response.text}")
 
 
-def get_existing_tasks(session_token):
+def get_existing_tasks(session_token, time_task_creation):
     global app_token
+    
+    url = 'https://task.it25.org/apirest.php/search/ticket'
 
-    url = "https://task.it25.org/apirest.php/search/ticket?criteria[0][link]=AND&criteria[0][field]=15&criteria[0][searchtype]=morethan&criteria[0][value]=-15MINUTE&itemtype=Ticket&start=0"
+    time_task_creation_from_tp = datetime.fromtimestamp(time_task_creation).strftime("%Y-%m-%d %H:%M:%S")
 
-    # Заголовки запроса
+    params = {
+        'criteria[0][link]': 'AND', 
+        'criteria[0][field]': '15', 
+        'criteria[0][searchtype]': 'morethan', 
+        'criteria[0][value]': time_task_creation_from_tp, 
+        'itemtype': 'Ticket', 
+        'start': '0'
+        }
+    
     headers = {
         "Content-Type": "application/json",
         "App-Token": app_token,
@@ -149,7 +155,7 @@ def get_existing_tasks(session_token):
 
     # Отправка запроса GET
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, params=params)
     except requests.exceptions.ConnectionError as e:
         print(f"Ошибка соединения: {e}")
     except requests.exceptions.NameResolutionError as e:
