@@ -46,13 +46,39 @@ logging.basicConfig(
 def get_task_time():
     conn = sqlite3.connect(config['DATABASE']['db_path'])
     cur = conn.cursor()
-    cur.execute('''CREATE TABLE IF NOT EXISTS
+
+    # Создание таблицы (если ее еще нет)
+    res = cur.execute('''CREATE TABLE IF NOT EXISTS
     tasks_notifications 
     (task_id INTEGER,
     time_task_creation TEXT)''')
 
-    cur.execute("SELECT time_task_creation FROM tasks_notifications")
-    result = cur.fetchone()
+    # Проверка результата создания таблицы
+    if res.rowcount == 0:
+        # Таблица уже существует, поэтому нет новых записей
+        logging.info("Таблица tasks_notifications уже существует.")
+    else:
+        # Таблица создана, вывести информацию в лог
+        logging.info("Таблица tasks_notifications создана.")
+
+    try:
+        cur.execute("SELECT time_task_creation FROM tasks_notifications")
+        result = cur.fetchone()
+    except sqlite3.OperationalError as e:
+        # Обработка ошибки: 
+        # 1. Вывод ошибки в лог
+        logging.error(f'Ошибка при чтении базы данных: {e}')
+        # 2. Проверка, не связано ли это с отсутствием колонки
+        if 'no such column' in str(e):
+            # 3. Обновление схемы таблицы (добавление колонки)
+            cur.execute("ALTER TABLE tasks_notifications ADD COLUMN time_task_creation TEXT")
+            conn.commit()  # Сохранение изменений в схеме
+            # 4. Повторный запрос к базе данных
+            cur.execute("SELECT time_task_creation FROM tasks_notifications")
+            result = cur.fetchone()
+        else:
+            # 5. Если ошибка не связана с колонкой, вывести предупреждение в лог
+            logging.warning('Ошибка в функции get_task_time(), не связанная с отсутствием колонки.')
 
     logging.debug('База данных создана')
 
