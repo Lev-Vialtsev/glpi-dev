@@ -104,6 +104,11 @@ def sorter(session_token, result, production, cur, conn):  # Добавлен п
     except NameError:
         session_token = glpil.init_session()
         task = glpil.get_existing_tasks(session_token, float(last_timestamp))
+    except TypeError:
+        # Если значение пустое, берем текущее время минус 1 час
+        now = datetime.now()
+        last_timestamp = datetime.strptime((now - timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S'), "%Y-%m-%d %H:%M:%S").timestamp()
+        task = glpil.get_existing_tasks(session_token, float(last_timestamp))
 
     # Сортировка заявок по времени создания если есть новые заявки
     if task['count'] == 0:
@@ -156,7 +161,7 @@ def request_glpi(session_token, task_data):
             assigned_info = glpil.get_user_info(session_token, task_data["5"][i])
             # Получаем строку с именем и фамилией назначенного пользователя
             assigned_to += f'{i + 1}: '
-            assigned_to += f'{assigned_info['firstname']} {assigned_info['realname']} '
+            assigned_to += str(assigned_info[firstname]) + str(assigned_info[realname])
 
     logging.debug('Информация о заявке получена')
 
@@ -200,6 +205,8 @@ def get_text_elem(task_data, task_content):
             content += content_text[j]
     content = content.replace('&#62;', '')
 
+
+
     logging.debug('Текст готов к формированию')
 
     return type, category, content
@@ -209,7 +216,7 @@ def get_text_elem(task_data, task_content):
 def do_text(task_data, autor_name, assigned_to, content, task_id, category, type):
     text =  f'{task_data["19"][-8:-3]} '
     text += f'{type} "<a href="https://task.it25.org/front/ticket.form.php?id={task_id}">'
-    text += f'{task_data["1"]}</a>" \n{task_data["80"]}'
+    text += f'{task_data["1"]}</a>" \nID: {task_id} \n{task_data["80"]}'
     text += f'\nИнициатор: {autor_name["firstname"]} {autor_name["realname"]}'
     text += f'\nНазначено: {assigned_to}'
     text += f'\nСрок: {category}'
